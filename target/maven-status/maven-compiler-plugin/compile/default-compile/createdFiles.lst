@@ -1,6 +1,3 @@
-com\algocoach\domain\Difficulty.class
 com\algocoach\AlgoCoachApplication.class
 com\algocoach\controller\ProblemController.class
 com\algocoach\controller\HelloController.class
-com\algocoach\repository\ProblemRepository.class
-com\algocoach\domain\Problem.class

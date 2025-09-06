@@ -1,46 +1,41 @@
 package com.algocoach.controller;
 
-import com.algocoach.domain.Problem;
-import com.algocoach.domain.Difficulty;
-import com.algocoach.repository.ProblemRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @RestController
 @RequestMapping("/problems")
 public class ProblemController {
     
-    @Autowired
-    private ProblemRepository problemRepository;
-    
     @GetMapping
-    public List<Problem> getAllProblems() {
-        return problemRepository.findAll();
+    public List<Map<String, Object>> getAllProblems() {
+        List<Map<String, Object>> problems = new ArrayList<>();
+        
+        Map<String, Object> problem1 = new HashMap<>();
+        problem1.put("id", 1);
+        problem1.put("title", "Two Sum");
+        problem1.put("difficulty", "EASY");
+        problem1.put("topic", "Array");
+        problems.add(problem1);
+        
+        Map<String, Object> problem2 = new HashMap<>();
+        problem2.put("id", 2);
+        problem2.put("title", "Add Two Numbers");
+        problem2.put("difficulty", "MEDIUM");
+        problem2.put("topic", "Linked List");
+        problems.add(problem2);
+        
+        return problems;
     }
     
     @GetMapping("/{id}")
-    public ResponseEntity<Problem> getProblemById(@PathVariable Long id) {
-        Optional<Problem> problem = problemRepository.findById(id);
-        return problem.map(ResponseEntity::ok)
-                     .orElse(ResponseEntity.notFound().build());
-    }
-    
-    @GetMapping("/difficulty/{difficulty}")
-    public List<Problem> getProblemsByDifficulty(@PathVariable Difficulty difficulty) {
-        return problemRepository.findByDifficulty(difficulty);
-    }
-    
-    @GetMapping("/topic/{topic}")
-    public List<Problem> getProblemsByTopic(@PathVariable String topic) {
-        return problemRepository.findByTopic(topic);
-    }
-    
-    @PostMapping
-    public Problem createProblem(@RequestBody Problem problem) {
-        return problemRepository.save(problem);
+    public Map<String, Object> getProblemById(@PathVariable Long id) {
+        Map<String, Object> problem = new HashMap<>();
+        problem.put("id", id);
+        problem.put("title", "Sample Problem " + id);
+        problem.put("difficulty", "EASY");
+        problem.put("topic", "Array");
+        return problem;
     }
 }
