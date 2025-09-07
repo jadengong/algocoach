@@ -1,0 +1,10 @@
+[33m0c15833[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Create .gitignore
+[33m546694a[m feat: add automatic data initialization
+[33m34c2f60[m refactor: update ProblemController to use repository layer
+[33m5d6e053[m feat: create ProblemRepository with custom queries
+[33m7a9f807[m feat: create Problem entity and Difficulty enum
+[33m0beb87b[m feat: add JPA and H2 database dependencies - Add spring-boot-starter-data-jpa dependency - Add H2 in-memory database dependency - Configure H2 database connection in application.properties - Enable H2 console for development debugging - Set up JPA/Hibernate configuration with auto-ddl
+[33m62e350c[m add 15 real LeetCode problems with filtering
+[33m726e469[m simplify to basic REST API with mock data
+[33mfd2b6cd[m add basic Problem domain model and JPA setup
+[33m1875d87[m add application configuration
