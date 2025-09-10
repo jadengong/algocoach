@@ -27,4 +27,6 @@ public interface ProblemRepository extends JpaRepository<Problem, Long> {
                                @Param("title") String title);
     
     List<Problem> findByLeetcodeId(Long leetcodeId);
+    
+    long countByDifficulty(Difficulty difficulty);
 }
