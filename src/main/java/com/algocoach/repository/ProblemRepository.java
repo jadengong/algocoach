@@ -31,4 +31,25 @@ public interface ProblemRepository extends JpaRepository<Problem, Long> {
     long countByDifficulty(Difficulty difficulty);
     
     long countByTopicIgnoreCase(String topic);
+    
+    // Find problems by multiple topics
+    List<Problem> findByTopicInIgnoreCase(List<String> topics);
+    
+    // Find problems by difficulty and topic combination
+    List<Problem> findByDifficultyAndTopicIgnoreCase(Difficulty difficulty, String topic);
+    
+    // Get random problems by difficulty
+    @Query(value = "SELECT * FROM problem WHERE difficulty = :difficulty ORDER BY RANDOM() LIMIT :limit", nativeQuery = true)
+    List<Problem> findRandomByDifficulty(@Param("difficulty") String difficulty, @Param("limit") int limit);
+    
+    // Find problems with specific difficulty levels
+    List<Problem> findByDifficultyIn(List<Difficulty> difficulties);
+    
+    // Count total problems
+    @Query("SELECT COUNT(p) FROM Problem p")
+    long getTotalProblemCount();
+    
+    // Find problems by partial title match (case insensitive)
+    @Query("SELECT p FROM Problem p WHERE LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+    List<Problem> findByTitleKeyword(@Param("keyword") String keyword);
 }
