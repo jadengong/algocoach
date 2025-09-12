@@ -29,4 +29,6 @@ public interface ProblemRepository extends JpaRepository<Problem, Long> {
     List<Problem> findByLeetcodeId(Long leetcodeId);
     
     long countByDifficulty(Difficulty difficulty);
+    
+    long countByTopicIgnoreCase(String topic);
 }
