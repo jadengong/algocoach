@@ -61,4 +61,9 @@ public class AuthController {
                     .body(Map.of("valid", false, "error", "Invalid token"));
         }
     }
+
+    @GetMapping("/health")
+    public ResponseEntity<?> healthCheck() {
+        return ResponseEntity.ok(Map.of("status", "Auth service is running"));
+    }
 }
