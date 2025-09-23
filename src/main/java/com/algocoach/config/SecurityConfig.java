@@ -74,6 +74,8 @@ public class SecurityConfig {
                 .requestMatchers("/h2-console/**").permitAll()
                 .requestMatchers("/hello").permitAll()
                 .requestMatchers("/test/**").permitAll()
+                .requestMatchers("/api-docs/**").permitAll()
+                .requestMatchers("/mvp/**").authenticated()
                 .anyRequest().authenticated()
             )
             .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable())) // For H2 console
