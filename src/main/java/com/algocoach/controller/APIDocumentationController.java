@@ -110,4 +110,13 @@ public class APIDocumentationController {
         
         return testData;
     }
+
+    @GetMapping("/ping")
+    public Map<String, Object> ping() {
+        Map<String, Object> res = new HashMap<>();
+        res.put("status", "ok");
+        res.put("service", "api-docs");
+        res.put("time", System.currentTimeMillis());
+        return res;
+    }
 }
