@@ -35,6 +35,7 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
+        // BCrypt strength of 12 provides good security with reasonable performance
         return new BCryptPasswordEncoder(12);
     }
 
