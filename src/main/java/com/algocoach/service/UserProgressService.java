@@ -61,6 +61,10 @@ public class UserProgressService {
             }
         }
         
+        // Calculate confidence score based on solving performance
+        double confidenceScore = calculateConfidenceScore(progress);
+        progress.setConfidenceScore(confidenceScore);
+        
         return userProgressRepository.save(progress);
     }
     
@@ -142,5 +146,68 @@ public class UserProgressService {
         }
         
         return userProgressRepository.save(progress);
+    }
+    
+    /**
+     * Mark a problem as solved with explicit confidence score
+     */
+    public UserProgress solveProblem(User user, Problem problem, Integer timeSpentMinutes, Double confidenceScore) {
+        Optional<UserProgress> existingProgress = userProgressRepository.findByUserAndProblem(user, problem);
+        
+        UserProgress progress;
+        if (existingProgress.isPresent()) {
+            progress = existingProgress.get();
+            progress.setStatus(ProgressStatus.SOLVED);
+            progress.setSolvedAt(LocalDateTime.now());
+            if (timeSpentMinutes != null) {
+                progress.setTimeSpentMinutes(timeSpentMinutes);
+            }
+        } else {
+            progress = new UserProgress(user, problem, ProgressStatus.SOLVED);
+            progress.setSolvedAt(LocalDateTime.now());
+            if (timeSpentMinutes != null) {
+                progress.setTimeSpentMinutes(timeSpentMinutes);
+            }
+        }
+        
+        // Use provided confidence score or calculate one
+        if (confidenceScore != null) {
+            progress.setConfidenceScore(Math.max(0.0, Math.min(1.0, confidenceScore))); // Clamp between 0 and 1
+        } else {
+            double calculatedScore = calculateConfidenceScore(progress);
+            progress.setConfidenceScore(calculatedScore);
+        }
+        
+        return userProgressRepository.save(progress);
+    }
+    
+    /**
+     * Calculate confidence score based on solving performance
+     * Higher score = more confident (fewer attempts, less time, fewer hints)
+     */
+    private double calculateConfidenceScore(UserProgress progress) {
+        double score = 1.0; // Start with perfect confidence
+        
+        // Penalize for multiple attempts (each attempt reduces confidence by 0.15)
+        score -= (progress.getAttemptsCount() - 1) * 0.15;
+        
+        // Penalize for using hints (each hint reduces confidence by 0.2)
+        score -= progress.getHintsUsed() * 0.2;
+        
+        // Adjust based on time spent (if available)
+        if (progress.getTimeSpentMinutes() != null) {
+            int timeSpent = progress.getTimeSpentMinutes();
+            // If took more than 45 minutes, reduce confidence
+            if (timeSpent > 45) {
+                score -= 0.1;
+            }
+            // If took more than 90 minutes, reduce more
+            if (timeSpent > 90) {
+                score -= 0.2;
+            }
+        }
+        
+        // Ensure score is between 0 and 1
+        return Math.max(0.0, Math.min(1.0, score));
     }
 }

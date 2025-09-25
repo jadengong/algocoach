@@ -102,7 +102,7 @@ public class ProblemRecommendationService {
     }
     
     /**
-     * Analyze user's skill level based on solved problems
+     * Analyze user's skill level based on solved problems and confidence scores
      */
     private Difficulty analyzeUserSkillLevel(List<UserProgress> solvedProblems) {
         if (solvedProblems.isEmpty()) {
@@ -115,20 +115,37 @@ public class ProblemRecommendationService {
                     Collectors.counting()
                 ));
         
+        // Calculate average confidence by difficulty
+        Map<Difficulty, Double> avgConfidenceByDifficulty = solvedProblems.stream()
+                .collect(Collectors.groupingBy(
+                    up -> up.getProblem().getDifficulty(),
+                    Collectors.averagingDouble(UserProgress::getConfidenceScore)
+                ));
+        
         long easyCount = difficultyCount.getOrDefault(Difficulty.EASY, 0L);
         long mediumCount = difficultyCount.getOrDefault(Difficulty.MEDIUM, 0L);
         long hardCount = difficultyCount.getOrDefault(Difficulty.HARD, 0L);
         
-        // Simple skill level analysis
-        if (easyCount < 5) {
+        double easyConfidence = avgConfidenceByDifficulty.getOrDefault(Difficulty.EASY, 0.0);
+        double mediumConfidence = avgConfidenceByDifficulty.getOrDefault(Difficulty.MEDIUM, 0.0);
+        double hardConfidence = avgConfidenceByDifficulty.getOrDefault(Difficulty.HARD, 0.0);
+        
+        // Enhanced skill level analysis with confidence scoring
+        if (easyCount < 3 || easyConfidence < 0.6) {
             return Difficulty.EASY;
-        } else if (mediumCount < 3) {
+        } else if (mediumCount < 2 || mediumConfidence < 0.5) {
             return Difficulty.MEDIUM;
-        } else if (hardCount < 2) {
+        } else if (hardCount < 1 || hardConfidence < 0.4) {
             return Difficulty.HARD;
         } else {
-            // Advanced user - recommend medium problems for balanced practice
-            return Difficulty.MEDIUM;
+            // Advanced user - recommend based on confidence levels
+            if (mediumConfidence > 0.7) {
+                return Difficulty.HARD;
+            } else if (easyConfidence > 0.8) {
+                return Difficulty.MEDIUM;
+            } else {
+                return Difficulty.MEDIUM; // Balanced practice
+            }
         }
     }
     
@@ -161,6 +178,31 @@ public class ProblemRecommendationService {
             topicStats.put(result[0].toString(), (Long) result[1]);
         }
         stats.put("solvedByTopic", topicStats);
+        
+        // Add confidence statistics
+        List<UserProgress> solvedProblems = userProgressRepository.findSolvedProblemsByUser(user);
+        double avgConfidence = solvedProblems.stream()
+                .mapToDouble(UserProgress::getConfidenceScore)
+                .average()
+                .orElse(0.0);
+        stats.put("averageConfidence", Math.round(avgConfidence * 100.0) / 100.0);
+        
+        // Confidence by difficulty
+        Map<String, Double> confidenceByDifficulty = new HashMap<>();
+        for (Object[] result : solvedByDifficulty) {
+            String difficulty = result[0].toString();
+            List<UserProgress> problemsOfDifficulty = solvedProblems.stream()
+                    .filter(up -> up.getProblem().getDifficulty().toString().equals(difficulty))
+                    .toList();
+            if (!problemsOfDifficulty.isEmpty()) {
+                double avgConf = problemsOfDifficulty.stream()
+                        .mapToDouble(UserProgress::getConfidenceScore)
+                        .average()
+                        .orElse(0.0);
+                confidenceByDifficulty.put(difficulty, Math.round(avgConf * 100.0) / 100.0);
+            }
+        }
+        stats.put("confidenceByDifficulty", confidenceByDifficulty);
         
         return stats;
     }
