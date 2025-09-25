@@ -64,7 +64,12 @@ curl -X POST http://localhost:8081/mvp/problems/1/hint \
 
 #### Step 7: Mark Problem as Solved
 ```bash
+# Solve with automatic confidence calculation
 curl -X POST "http://localhost:8081/mvp/problems/1/solve?timeSpentMinutes=15" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Solve with explicit confidence score (0.0 to 1.0)
+curl -X POST "http://localhost:8081/mvp/problems/1/solve?timeSpentMinutes=15&confidenceScore=0.8" \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
@@ -112,6 +117,7 @@ curl -X GET "http://localhost:8081/problems/search?difficulty=EASY&topic=Array" 
 ✅ **User Statistics** - Completion rates, progress by difficulty/topic
 ✅ **Problem Solving Workflow** - Start → Attempt → Hint → Solve/Give Up
 ✅ **Dashboard** - Personalized overview of recommendations and progress
+✅ **Confidence Scoring** - Smart difficulty progression based on solving confidence
 
 ## 🗄️ Database Access
 
@@ -126,6 +132,37 @@ The application comes pre-loaded with:
 - 8 algorithm problems (Easy, Medium, Hard)
 - Detailed descriptions, examples, and constraints
 - Topics: Array, Stack, Dynamic Programming, Hash Table, String, Linked List
+
+## 🧠 Confidence Scoring System (NEW!)
+
+The enhanced AlgoCoach now includes a **smart confidence scoring system** that makes problem recommendations more intelligent:
+
+### How It Works
+- **Automatic Calculation**: Confidence score (0.0-1.0) calculated based on:
+  - Number of attempts (fewer = higher confidence)
+  - Hints used (fewer = higher confidence) 
+  - Time spent (faster = higher confidence)
+- **Manual Input**: Users can also provide their own confidence rating
+- **Smart Recommendations**: System uses confidence scores to suggest appropriate difficulty levels
+
+### Benefits
+- **Adaptive Learning**: Recommendations improve as users solve more problems
+- **Confidence Tracking**: Users can see their confidence levels by difficulty/topic
+- **Better Progression**: Prevents users from jumping to problems too hard/easy for their skill level
+
+### API Response Example
+```json
+{
+  "message": "Problem solved!",
+  "progress": {
+    "confidenceScore": 0.75,
+    "attemptsCount": 2,
+    "hintsUsed": 1,
+    "timeSpentMinutes": 25
+  },
+  "confidenceScore": 0.75
+}
+```
 
 ## 🔧 Next Steps for Full Product
 

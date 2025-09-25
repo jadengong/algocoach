@@ -38,6 +38,9 @@ public class UserProgress {
     @Column(name = "hints_used")
     private Integer hintsUsed = 0;
     
+    @Column(name = "confidence_score")
+    private Double confidenceScore = 0.0; // 0.0 to 1.0, represents how confident user was solving this problem
+    
     // Default constructor
     public UserProgress() {}
     
@@ -121,6 +124,14 @@ public class UserProgress {
     
     public void setHintsUsed(Integer hintsUsed) {
         this.hintsUsed = hintsUsed;
+    }
+    
+    public Double getConfidenceScore() {
+        return confidenceScore;
+    }
+    
+    public void setConfidenceScore(Double confidenceScore) {
+        this.confidenceScore = confidenceScore;
     }
     
     @Override
