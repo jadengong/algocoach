@@ -103,10 +103,29 @@ curl -X GET "http://localhost:8081/problems/search?difficulty=EASY&topic=Array" 
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
+#### Discover Problems with Advanced Filtering
+```bash
+# Get available filters
+curl -X GET http://localhost:8081/problems/filters
+
+# Discover problems with pagination and sorting
+curl -X GET "http://localhost:8081/problems/discover?difficulty=EASY&sortBy=acceptance&page=0&size=5" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Discover problems by topic with pagination
+curl -X GET "http://localhost:8081/mvp/problems/discover?topic=Array&sortBy=title&page=0&size=3" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Get all unsolved problems sorted by difficulty
+curl -X GET "http://localhost:8081/mvp/problems/discover?sortBy=difficulty&page=0&size=10" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
 ## 🎯 MVP Features Demonstrated
 
 ✅ **User Authentication** - Register, login, JWT token validation
 ✅ **Problem Management** - Browse, search, filter problems by difficulty/topic
+✅ **Advanced Problem Discovery** - Pagination, sorting, and smart filtering
 ✅ **Personalized Recommendations** - AI-like recommendations based on user progress
 ✅ **Progress Tracking** - Track attempts, solve status, time spent, hints used
 ✅ **User Statistics** - Completion rates, progress by difficulty/topic
@@ -126,6 +145,40 @@ The application comes pre-loaded with:
 - 8 algorithm problems (Easy, Medium, Hard)
 - Detailed descriptions, examples, and constraints
 - Topics: Array, Stack, Dynamic Programming, Hash Table, String, Linked List
+
+## 🔍 Advanced Problem Discovery (NEW!)
+
+The enhanced AlgoCoach now includes **smart problem discovery** with advanced filtering and pagination:
+
+### New Features
+- **Pagination**: Browse problems page by page (default 10 per page)
+- **Multiple Sorting Options**: Sort by difficulty, acceptance rate, or title
+- **Smart Filtering**: Filter by difficulty and topic with real-time results
+- **Personalized Discovery**: MVP endpoint excludes already solved problems
+- **Filter Discovery**: Get available topics, difficulties, and sort options
+
+### API Endpoints
+- `GET /problems/filters` - Get available filter options
+- `GET /problems/discover` - Public problem discovery with pagination
+- `GET /mvp/problems/discover` - Personalized discovery (excludes solved problems)
+
+### Example Response
+```json
+{
+  "problems": [...],
+  "totalCount": 8,
+  "page": 0,
+  "size": 5,
+  "totalPages": 2,
+  "hasNext": true,
+  "hasPrevious": false,
+  "filters": {
+    "difficulty": "EASY",
+    "topic": "all",
+    "sortBy": "acceptance"
+  }
+}
+```
 
 ## 🔧 Next Steps for Full Product
 

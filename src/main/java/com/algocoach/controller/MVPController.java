@@ -17,6 +17,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/mvp")
@@ -80,6 +82,86 @@ public class MVPController {
             User user = getCurrentUser(authentication);
             List<Problem> problems = recommendationService.getRandomProblems(user, difficulty, limit);
             return ResponseEntity.ok(Map.of("problems", problems));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+    
+    /**
+     * Get personalized problem discovery with advanced filtering
+     */
+    @GetMapping("/problems/discover")
+    public ResponseEntity<?> discoverProblems(
+            Authentication authentication,
+            @RequestParam(required = false) String difficulty,
+            @RequestParam(required = false) String topic,
+            @RequestParam(required = false) String sortBy,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        try {
+            User user = getCurrentUser(authentication);
+            
+            // Get user's solved problems to exclude them
+            List<UserProgress> solvedProblems = progressService.getSolvedProblems(user);
+            Set<Long> solvedProblemIds = solvedProblems.stream()
+                    .map(up -> up.getProblem().getId())
+                    .collect(Collectors.toSet());
+            
+            // Get filtered problems
+            Difficulty difficultyEnum = null;
+            if (difficulty != null) {
+                try {
+                    difficultyEnum = Difficulty.valueOf(difficulty.toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    return ResponseEntity.badRequest().body(Map.of("error", "Invalid difficulty level: " + difficulty));
+                }
+            }
+            
+            List<Problem> problems = problemRepository.findByFilters(difficultyEnum, topic, null);
+            
+            // Filter out solved problems
+            problems = problems.stream()
+                    .filter(p -> !solvedProblemIds.contains(p.getId()))
+                    .collect(Collectors.toList());
+            
+            // Apply sorting
+            if (sortBy != null) {
+                switch (sortBy.toLowerCase()) {
+                    case "difficulty":
+                        problems.sort((p1, p2) -> p1.getDifficulty().compareTo(p2.getDifficulty()));
+                        break;
+                    case "acceptance":
+                        problems.sort((p1, p2) -> Double.compare(p2.getAcceptanceRate(), p1.getAcceptanceRate()));
+                        break;
+                    case "title":
+                        problems.sort((p1, p2) -> p1.getTitle().compareToIgnoreCase(p2.getTitle()));
+                        break;
+                    default:
+                        // Default sort by acceptance rate (easiest first)
+                        problems.sort((p1, p2) -> Double.compare(p2.getAcceptanceRate(), p1.getAcceptanceRate()));
+                }
+            }
+            
+            // Apply pagination
+            int start = page * size;
+            int end = Math.min(start + size, problems.size());
+            List<Problem> paginatedProblems = problems.subList(start, end);
+            
+            Map<String, Object> result = new HashMap<>();
+            result.put("problems", paginatedProblems);
+            result.put("totalCount", problems.size());
+            result.put("page", page);
+            result.put("size", size);
+            result.put("totalPages", (int) Math.ceil((double) problems.size() / size));
+            result.put("hasNext", end < problems.size());
+            result.put("hasPrevious", page > 0);
+            result.put("filters", Map.of(
+                "difficulty", difficulty != null ? difficulty : "all",
+                "topic", topic != null ? topic : "all",
+                "sortBy", sortBy != null ? sortBy : "acceptance"
+            ));
+            
+            return ResponseEntity.ok(result);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
