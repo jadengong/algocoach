@@ -191,12 +191,17 @@ public class MVPController {
     public ResponseEntity<?> solveProblem(
             Authentication authentication,
             @PathVariable Long problemId,
-            @RequestParam(required = false) Integer timeSpentMinutes) {
+            @RequestParam(required = false) Integer timeSpentMinutes,
+            @RequestParam(required = false) Double confidenceScore) {
         try {
             User user = getCurrentUser(authentication);
             Problem problem = getProblemById(problemId);
-            UserProgress progress = progressService.solveProblem(user, problem, timeSpentMinutes);
-            return ResponseEntity.ok(Map.of("message", "Problem solved!", "progress", progress));
+            UserProgress progress = progressService.solveProblem(user, problem, timeSpentMinutes, confidenceScore);
+            return ResponseEntity.ok(Map.of(
+                "message", "Problem solved!", 
+                "progress", progress,
+                "confidenceScore", progress.getConfidenceScore()
+            ));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
