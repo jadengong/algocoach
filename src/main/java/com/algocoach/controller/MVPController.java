@@ -332,6 +332,41 @@ public class MVPController {
     }
     
     /**
+     * Toggle bookmark status for a problem
+     */
+    @PostMapping("/problems/{problemId}/bookmark")
+    public ResponseEntity<?> toggleBookmark(
+            Authentication authentication,
+            @PathVariable Long problemId) {
+        try {
+            User user = getCurrentUser(authentication);
+            Problem problem = getProblemById(problemId);
+            UserProgress progress = progressService.toggleBookmark(user, problem);
+            return ResponseEntity.ok(Map.of(
+                "message", progress.getIsBookmarked() ? "Problem bookmarked!" : "Bookmark removed!",
+                "isBookmarked", progress.getIsBookmarked(),
+                "progress", progress
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+    
+    /**
+     * Get user's bookmarked problems
+     */
+    @GetMapping("/bookmarks")
+    public ResponseEntity<?> getBookmarks(Authentication authentication) {
+        try {
+            User user = getCurrentUser(authentication);
+            List<UserProgress> bookmarks = progressService.getBookmarkedProblems(user);
+            return ResponseEntity.ok(Map.of("bookmarks", bookmarks));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+    
+    /**
      * Get MVP dashboard data
      */
     @GetMapping("/dashboard")

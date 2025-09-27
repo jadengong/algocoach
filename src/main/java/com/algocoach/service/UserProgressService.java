@@ -210,4 +210,29 @@ public class UserProgressService {
         // Ensure score is between 0 and 1
         return Math.max(0.0, Math.min(1.0, score));
     }
+    
+    /**
+     * Toggle bookmark status for a problem
+     */
+    public UserProgress toggleBookmark(User user, Problem problem) {
+        Optional<UserProgress> existingProgress = userProgressRepository.findByUserAndProblem(user, problem);
+        
+        UserProgress progress;
+        if (existingProgress.isPresent()) {
+            progress = existingProgress.get();
+            progress.setIsBookmarked(!progress.getIsBookmarked());
+        } else {
+            progress = new UserProgress(user, problem, ProgressStatus.NOT_STARTED);
+            progress.setIsBookmarked(true);
+        }
+        
+        return userProgressRepository.save(progress);
+    }
+    
+    /**
+     * Get user's bookmarked problems
+     */
+    public List<UserProgress> getBookmarkedProblems(User user) {
+        return userProgressRepository.findByUserAndIsBookmarkedTrue(user);
+    }
 }

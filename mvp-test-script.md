@@ -73,7 +73,18 @@ curl -X POST "http://localhost:8081/mvp/problems/1/solve?timeSpentMinutes=15&con
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
-#### Step 8: Check Your Progress
+#### Step 8: Bookmark a Problem
+```bash
+# Bookmark a problem
+curl -X POST http://localhost:8081/mvp/problems/1/bookmark \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Remove bookmark (same endpoint toggles)
+curl -X POST http://localhost:8081/mvp/problems/1/bookmark \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+#### Step 9: Check Your Progress
 ```bash
 # Get dashboard
 curl -X GET http://localhost:8081/mvp/dashboard \
@@ -85,6 +96,10 @@ curl -X GET http://localhost:8081/mvp/stats \
 
 # Get solved problems
 curl -X GET http://localhost:8081/mvp/progress/solved \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Get bookmarked problems
+curl -X GET http://localhost:8081/mvp/bookmarks \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
@@ -137,6 +152,7 @@ curl -X GET "http://localhost:8081/mvp/problems/discover?sortBy=difficulty&page=
 ✅ **Problem Solving Workflow** - Start → Attempt → Hint → Solve/Give Up
 ✅ **Dashboard** - Personalized overview of recommendations and progress
 ✅ **Confidence Scoring** - Smart difficulty progression based on solving confidence
+✅ **Problem Bookmarks** - Save problems for later practice
 
 ## 🗄️ Database Access
 
@@ -216,6 +232,37 @@ The enhanced AlgoCoach now includes a **smart confidence scoring system** that m
   "confidenceScore": 0.75
 }
 ```
+
+## 🔖 Problem Bookmarks (NEW!)
+
+The enhanced AlgoCoach now includes **problem bookmarking** functionality:
+
+### How It Works
+- **Toggle Bookmarks**: Click to bookmark/unbookmark any problem
+- **Persistent Storage**: Bookmarks are saved per user
+- **Easy Access**: View all bookmarked problems in one place
+- **Smart Integration**: Works with existing progress tracking
+
+### API Endpoints
+- `POST /mvp/problems/{id}/bookmark` - Toggle bookmark status
+- `GET /mvp/bookmarks` - Get all bookmarked problems
+
+### Example Usage
+```bash
+# Bookmark a problem
+curl -X POST http://localhost:8081/mvp/problems/1/bookmark \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Get bookmarked problems
+curl -X GET http://localhost:8081/mvp/bookmarks \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Benefits
+- **Personal Lists**: Create custom problem lists
+- **Study Planning**: Mark problems for later review
+- **Progress Tracking**: Keep track of interesting problems
+- **User Experience**: Simple one-click bookmarking
 
 ## 🔧 Next Steps for Full Product
 

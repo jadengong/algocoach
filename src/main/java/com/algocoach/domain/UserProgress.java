@@ -41,6 +41,9 @@ public class UserProgress {
     @Column(name = "confidence_score")
     private Double confidenceScore = 0.0; // 0.0 to 1.0, represents how confident user was solving this problem
     
+    @Column(name = "is_bookmarked")
+    private Boolean isBookmarked = false; // Whether user has bookmarked this problem
+    
     // Default constructor
     public UserProgress() {}
     
@@ -132,6 +135,14 @@ public class UserProgress {
     
     public void setConfidenceScore(Double confidenceScore) {
         this.confidenceScore = confidenceScore;
+    }
+    
+    public Boolean getIsBookmarked() {
+        return isBookmarked;
+    }
+    
+    public void setIsBookmarked(Boolean isBookmarked) {
+        this.isBookmarked = isBookmarked;
     }
     
     @Override

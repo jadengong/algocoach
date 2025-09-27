@@ -39,4 +39,6 @@ public interface UserProgressRepository extends JpaRepository<UserProgress, Long
     
     @Query("SELECT up FROM UserProgress up WHERE up.user = :user AND up.status = 'NOT_STARTED' ORDER BY up.problem.difficulty, up.problem.title")
     List<UserProgress> findNotStartedProblemsByUser(@Param("user") User user);
+    
+    List<UserProgress> findByUserAndIsBookmarkedTrue(User user);
 }
