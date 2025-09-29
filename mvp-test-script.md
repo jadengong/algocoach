@@ -123,6 +123,18 @@ curl -X GET "http://localhost:8081/problems/search?difficulty=EASY&topic=Array" 
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
+#### Get System Statistics
+```bash
+# Get difficulty breakdown with percentages
+curl -X GET http://localhost:8081/stats/difficulty-breakdown
+
+# Get topic breakdown with percentages  
+curl -X GET http://localhost:8081/stats/topic-breakdown
+
+# Get overall stats
+curl -X GET http://localhost:8081/stats/overview
+```
+
 #### Discover Problems with Advanced Filtering
 ```bash
 # Get available filters
@@ -153,6 +165,7 @@ curl -X GET "http://localhost:8081/mvp/problems/discover?sortBy=difficulty&page=
 ✅ **Dashboard** - Personalized overview of recommendations and progress
 ✅ **Confidence Scoring** - Smart difficulty progression based on solving confidence
 ✅ **Problem Bookmarks** - Save problems for later practice
+✅ **System Statistics** - Difficulty and topic breakdown with percentages
 
 ## 🗄️ Database Access
 
@@ -263,6 +276,52 @@ curl -X GET http://localhost:8081/mvp/bookmarks \
 - **Study Planning**: Mark problems for later review
 - **Progress Tracking**: Keep track of interesting problems
 - **User Experience**: Simple one-click bookmarking
+
+## 📊 System Statistics (NEW!)
+
+The enhanced AlgoCoach now includes **detailed system statistics** for better insights:
+
+### New Statistics Endpoints
+- **Difficulty Breakdown**: Shows problem distribution by difficulty with percentages
+- **Topic Breakdown**: Shows problem distribution by topic with percentages  
+- **Average Acceptance Rates**: Shows average acceptance rates by difficulty level
+
+### API Endpoints
+- `GET /stats/difficulty-breakdown` - Get difficulty statistics with percentages
+- `GET /stats/topic-breakdown` - Get topic statistics with percentages
+- `GET /stats/overview` - Get overall system statistics
+
+### Example Response
+```json
+{
+  "total": 8,
+  "breakdown": {
+    "easy": {
+      "count": 5,
+      "percentage": 63
+    },
+    "medium": {
+      "count": 2, 
+      "percentage": 25
+    },
+    "hard": {
+      "count": 1,
+      "percentage": 12
+    }
+  },
+  "averageAcceptanceRates": {
+    "easy": 47.08,
+    "medium": 35.0,
+    "hard": 35.2
+  }
+}
+```
+
+### Benefits
+- **Data Insights**: Understand problem distribution across the platform
+- **Planning**: Help users plan their learning path
+- **Analytics**: Provide valuable metrics for platform improvement
+- **Transparency**: Show users what types of problems are available
 
 ## 🔧 Next Steps for Full Product
 
