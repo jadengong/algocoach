@@ -22,4 +22,31 @@ public class HelloController {
         health.put("service", "AlgoCoach API");
         return health;
     }
+    
+    @GetMapping("/health/detailed")
+    public Map<String, Object> detailedHealth() {
+        Map<String, Object> health = new HashMap<>();
+        
+        // Basic health status
+        health.put("status", "UP");
+        health.put("timestamp", LocalDateTime.now());
+        
+        // Application info
+        health.put("application", Map.of(
+            "name", "AlgoCoach",
+            "version", "1.0.0",
+            "environment", "development"
+        ));
+        
+        // System info
+        Runtime runtime = Runtime.getRuntime();
+        health.put("system", Map.of(
+            "javaVersion", System.getProperty("java.version"),
+            "totalMemory", runtime.totalMemory(),
+            "freeMemory", runtime.freeMemory(),
+            "maxMemory", runtime.maxMemory()
+        ));
+        
+        return health;
+    }
 }
