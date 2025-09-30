@@ -76,6 +76,7 @@ public class SecurityConfig {
                 .requestMatchers("/auth/**").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
                 .requestMatchers("/hello").permitAll()
+                .requestMatchers("/health/**").permitAll()
                 .requestMatchers("/test/**").permitAll()
                 .requestMatchers("/api-docs/**").permitAll()
                 .requestMatchers("/mvp/**").authenticated()
