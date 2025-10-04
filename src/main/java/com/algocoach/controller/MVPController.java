@@ -1,16 +1,22 @@
 package com.algocoach.controller;
 
+import com.algocoach.annotation.RateLimited;
 import com.algocoach.domain.Difficulty;
 import com.algocoach.domain.Problem;
 import com.algocoach.domain.User;
 import com.algocoach.domain.UserProgress;
+import com.algocoach.exception.ResourceNotFoundException;
+import com.algocoach.exception.ValidationException;
 import com.algocoach.repository.ProblemRepository;
 import com.algocoach.service.ProblemRecommendationService;
 import com.algocoach.service.UserProgressService;
 import com.algocoach.service.UserService;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -23,6 +29,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/mvp")
 @CrossOrigin(origins = "*")
+@Validated
 public class MVPController {
     
     @Autowired
@@ -41,33 +48,30 @@ public class MVPController {
      * Get personalized problem recommendations for the current user
      */
     @GetMapping("/recommendations")
-    public ResponseEntity<?> getRecommendations(
+    @RateLimited(value = 100) // 100 recommendations per minute
+    public ResponseEntity<Map<String, Object>> getRecommendations(
             Authentication authentication,
-            @RequestParam(defaultValue = "5") int limit) {
-        try {
-            User user = getCurrentUser(authentication);
-            List<Problem> recommendations = recommendationService.getRecommendedProblems(user, limit);
-            return ResponseEntity.ok(Map.of("recommendations", recommendations));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
+            @RequestParam(defaultValue = "5") @Min(1) @Max(20) int limit) {
+        User user = getCurrentUser(authentication);
+        List<Problem> recommendations = recommendationService.getRecommendedProblems(user, limit);
+        return ResponseEntity.ok(Map.of("recommendations", recommendations));
     }
     
     /**
      * Get problems by topic
      */
     @GetMapping("/problems/topic/{topic}")
-    public ResponseEntity<?> getProblemsByTopic(
+    @RateLimited(value = 50) // 50 topic searches per minute
+    public ResponseEntity<Map<String, Object>> getProblemsByTopic(
             Authentication authentication,
             @PathVariable String topic,
-            @RequestParam(defaultValue = "10") int limit) {
-        try {
-            User user = getCurrentUser(authentication);
-            List<Problem> problems = recommendationService.getProblemsByTopic(user, topic, limit);
-            return ResponseEntity.ok(Map.of("problems", problems));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            @RequestParam(defaultValue = "10") @Min(1) @Max(50) int limit) {
+        if (topic == null || topic.trim().isEmpty()) {
+            throw new ValidationException("Topic cannot be empty");
         }
+        User user = getCurrentUser(authentication);
+        List<Problem> problems = recommendationService.getProblemsByTopic(user, topic, limit);
+        return ResponseEntity.ok(Map.of("problems", problems));
     }
     
     /**
@@ -171,40 +175,39 @@ public class MVPController {
      * Start working on a problem
      */
     @PostMapping("/problems/{problemId}/start")
-    public ResponseEntity<?> startProblem(
+    @RateLimited(value = 20) // 20 problem starts per minute
+    public ResponseEntity<Map<String, Object>> startProblem(
             Authentication authentication,
-            @PathVariable Long problemId) {
-        try {
-            User user = getCurrentUser(authentication);
-            Problem problem = getProblemById(problemId);
-            UserProgress progress = progressService.startProblem(user, problem);
-            return ResponseEntity.ok(Map.of("message", "Started working on problem", "progress", progress));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
+            @PathVariable @Min(1) Long problemId) {
+        User user = getCurrentUser(authentication);
+        Problem problem = getProblemById(problemId);
+        UserProgress progress = progressService.startProblem(user, problem);
+        return ResponseEntity.ok(Map.of("message", "Started working on problem", "progress", progress));
     }
     
     /**
      * Mark a problem as solved
      */
     @PostMapping("/problems/{problemId}/solve")
-    public ResponseEntity<?> solveProblem(
+    @RateLimited(value = 30) // 30 problem solves per minute
+    public ResponseEntity<Map<String, Object>> solveProblem(
             Authentication authentication,
-            @PathVariable Long problemId,
-            @RequestParam(required = false) Integer timeSpentMinutes,
+            @PathVariable @Min(1) Long problemId,
+            @RequestParam(required = false) @Min(0) @Max(1440) Integer timeSpentMinutes,
             @RequestParam(required = false) Double confidenceScore) {
-        try {
-            User user = getCurrentUser(authentication);
-            Problem problem = getProblemById(problemId);
-            UserProgress progress = progressService.solveProblem(user, problem, timeSpentMinutes, confidenceScore);
-            return ResponseEntity.ok(Map.of(
-                "message", "Problem solved!", 
-                "progress", progress,
-                "confidenceScore", progress.getConfidenceScore()
-            ));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        // Manual validation for confidence score
+        if (confidenceScore != null && (confidenceScore < 0.0 || confidenceScore > 1.0)) {
+            throw new ValidationException("Confidence score must be between 0.0 and 1.0");
         }
+        
+        User user = getCurrentUser(authentication);
+        Problem problem = getProblemById(problemId);
+        UserProgress progress = progressService.solveProblem(user, problem, timeSpentMinutes, confidenceScore);
+        return ResponseEntity.ok(Map.of(
+            "message", "Problem solved!", 
+            "progress", progress,
+            "confidenceScore", progress.getConfidenceScore()
+        ));
     }
     
     /**
@@ -410,6 +413,6 @@ public class MVPController {
     
     private Problem getProblemById(Long problemId) {
         return problemRepository.findById(problemId)
-                .orElseThrow(() -> new RuntimeException("Problem not found with id: " + problemId));
+                .orElseThrow(() -> new ResourceNotFoundException("Problem", problemId.toString()));
     }
 }

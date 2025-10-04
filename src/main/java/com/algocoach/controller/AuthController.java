@@ -1,8 +1,11 @@
 package com.algocoach.controller;
 
+import com.algocoach.annotation.RateLimited;
 import com.algocoach.dto.AuthResponse;
 import com.algocoach.dto.LoginRequest;
 import com.algocoach.dto.RegisterRequest;
+import com.algocoach.exception.AuthenticationException;
+import com.algocoach.exception.BusinessLogicException;
 import com.algocoach.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,49 +24,38 @@ public class AuthController {
     private AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest registerRequest) {
-        try {
-            AuthResponse response = authService.register(registerRequest);
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
+    @RateLimited(value = 5) // 5 registrations per minute
+    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest registerRequest) {
+        AuthResponse response = authService.register(registerRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest) {
-        try {
-            AuthResponse response = authService.login(loginRequest);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Invalid username or password"));
-        }
+    @RateLimited(value = 10) // 10 login attempts per minute
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
+        AuthResponse response = authService.login(loginRequest);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/validate")
-    public ResponseEntity<?> validateToken(@RequestHeader("Authorization") String token) {
-        try {
-            // Remove "Bearer " prefix if present
-            if (token.startsWith("Bearer ")) {
-                token = token.substring(7);
-            }
-            
-            // Validate token
-            if (authService.validateToken(token)) {
-                return ResponseEntity.ok(Map.of("valid", true));
-            } else {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("valid", false, "error", "Invalid token"));
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("valid", false, "error", "Invalid token"));
+    @RateLimited(value = 100) // 100 token validations per minute
+    public ResponseEntity<Map<String, Object>> validateToken(@RequestHeader("Authorization") String token) {
+        // Remove "Bearer " prefix if present
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+        
+        // Validate token
+        if (authService.validateToken(token)) {
+            return ResponseEntity.ok(Map.of("valid", true));
+        } else {
+            throw new AuthenticationException("Invalid token");
         }
     }
 
     @GetMapping("/health")
-    public ResponseEntity<?> healthCheck() {
+    @RateLimited(value = 200) // 200 health checks per minute
+    public ResponseEntity<Map<String, String>> healthCheck() {
         return ResponseEntity.ok(Map.of("status", "Auth service is running"));
     }
 }
