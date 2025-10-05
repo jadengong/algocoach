@@ -5,9 +5,11 @@ import com.algocoach.domain.Problem;
 import com.algocoach.repository.ProblemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Component
+@Profile("dev")
 public class DataInitializer implements CommandLineRunner {
     
     @Autowired

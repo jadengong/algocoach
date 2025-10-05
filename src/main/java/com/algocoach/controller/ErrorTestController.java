@@ -4,6 +4,7 @@ import com.algocoach.annotation.RateLimited;
 import com.algocoach.exception.AuthenticationException;
 import com.algocoach.exception.BusinessLogicException;
 import com.algocoach.exception.ResourceNotFoundException;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,6 +16,7 @@ import jakarta.validation.constraints.Max;
 import java.util.Map;
 
 @RestController
+@Profile({"dev","test"})
 @RequestMapping("/error-test")
 @CrossOrigin(origins = "*")
 public class ErrorTestController {
