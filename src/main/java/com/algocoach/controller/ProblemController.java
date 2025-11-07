@@ -2,6 +2,8 @@ package com.algocoach.controller;
 
 import com.algocoach.domain.Difficulty;
 import com.algocoach.domain.Problem;
+import com.algocoach.exception.ResourceNotFoundException;
+import com.algocoach.exception.ValidationException;
 import com.algocoach.repository.ProblemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -27,7 +29,7 @@ public class ProblemController {
     @GetMapping("/{id}")
     public Problem getProblemById(@PathVariable Long id) {
         return problemRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Problem not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Problem", id.toString()));
     }
     
     @GetMapping("/difficulty/{difficulty}")
@@ -36,7 +38,7 @@ public class ProblemController {
             Difficulty difficultyEnum = Difficulty.valueOf(difficulty.toUpperCase());
             return problemRepository.findByDifficulty(difficultyEnum);
         } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Invalid difficulty level: " + difficulty);
+            throw new ValidationException("Invalid difficulty level: " + difficulty);
         }
     }
     
@@ -54,7 +56,7 @@ public class ProblemController {
             try {
                 difficultyEnum = Difficulty.valueOf(difficulty.toUpperCase());
             } catch (IllegalArgumentException e) {
-                throw new RuntimeException("Invalid difficulty level: " + difficulty);
+                throw new ValidationException("Invalid difficulty level: " + difficulty);
             }
         }
         return problemRepository.findByFilters(difficultyEnum, topic, title);
@@ -73,7 +75,7 @@ public class ProblemController {
             try {
                 difficultyEnum = Difficulty.valueOf(difficulty.toUpperCase());
             } catch (IllegalArgumentException e) {
-                throw new RuntimeException("Invalid difficulty level: " + difficulty);
+                throw new ValidationException("Invalid difficulty level: " + difficulty);
             }
         }
         
@@ -122,7 +124,7 @@ public class ProblemController {
     @PutMapping("/{id}")
     public Problem updateProblem(@PathVariable Long id, @RequestBody Problem problemDetails) {
         Problem problem = problemRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Problem not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Problem", id.toString()));
         
         problem.setTitle(problemDetails.getTitle());
         problem.setDifficulty(problemDetails.getDifficulty());
@@ -139,7 +141,7 @@ public class ProblemController {
     @DeleteMapping("/{id}")
     public void deleteProblem(@PathVariable Long id) {
         Problem problem = problemRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Problem not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Problem", id.toString()));
         problemRepository.delete(problem);
     }
     
