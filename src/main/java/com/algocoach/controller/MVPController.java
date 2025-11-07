@@ -5,6 +5,7 @@ import com.algocoach.domain.Difficulty;
 import com.algocoach.domain.Problem;
 import com.algocoach.domain.User;
 import com.algocoach.domain.UserProgress;
+import com.algocoach.dto.RecommendationResult;
 import com.algocoach.exception.ResourceNotFoundException;
 import com.algocoach.exception.ValidationException;
 import com.algocoach.repository.ProblemRepository;
@@ -54,6 +55,20 @@ public class MVPController {
             @RequestParam(defaultValue = "5") @Min(1) @Max(20) int limit) {
         User user = getCurrentUser(authentication);
         List<Problem> recommendations = recommendationService.getRecommendedProblems(user, limit);
+        return ResponseEntity.ok(Map.of("recommendations", recommendations));
+    }
+    
+    /**
+     * Get enhanced personalized recommendations with explanations
+     * Includes topic-based recommendations, spaced repetition, and smooth difficulty progression
+     */
+    @GetMapping("/recommendations/enhanced")
+    @RateLimited(value = 100)
+    public ResponseEntity<Map<String, Object>> getEnhancedRecommendations(
+            Authentication authentication,
+            @RequestParam(defaultValue = "5") @Min(1) @Max(20) int limit) {
+        User user = getCurrentUser(authentication);
+        List<RecommendationResult> recommendations = recommendationService.getEnhancedRecommendations(user, limit);
         return ResponseEntity.ok(Map.of("recommendations", recommendations));
     }
     
@@ -203,6 +218,10 @@ public class MVPController {
         User user = getCurrentUser(authentication);
         Problem problem = getProblemById(problemId);
         UserProgress progress = progressService.solveProblem(user, problem, timeSpentMinutes, confidenceScore);
+        
+        // Clear recommendation cache since user progress has changed
+        recommendationService.clearUserCache(user.getId());
+        
         return ResponseEntity.ok(Map.of(
             "message", "Problem solved!", 
             "progress", progress,
